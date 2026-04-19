@@ -14,6 +14,7 @@ async function getUsers(limit) {
 async function createUser({ voornaam, achternaam }) {
   const pool = await getPool();
 
+  // Threat ID #90: Mitigatie voor SQL-injectie met prepared statements
   const [insertResult] = await pool.execute(
     'INSERT INTO `user` (voornaam, achternaam) VALUES (?, ?);',
     [voornaam, achternaam]
