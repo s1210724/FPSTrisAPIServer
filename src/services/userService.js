@@ -30,7 +30,27 @@ async function createUser(payload) {
   return userRepository.createUser(mappedPayload);
 }
 
+async function getUserByUsername(username) {
+  if (!username || typeof username !== 'string') {
+    const error = new Error('Username must be a non-empty string.');
+    error.status = 400;
+    throw error;
+  }
+  return userRepository.getUserByUsername(username);
+}
+
+async function getUserClaims(userId) {
+  if (!userId || typeof userId !== 'number') {
+    const error = new Error('User ID must be a valid number.');
+    error.status = 400;
+    throw error;
+  }
+  return userRepository.getUserClaims(userId);
+}
+
 module.exports = {
   getUsers,
-  createUser
+  createUser,
+  getUserByUsername,
+  getUserClaims
 };
