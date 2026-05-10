@@ -35,7 +35,8 @@ async function login(req, res) {
             });
         }
 
-        const token = createAccessToken(user[0]);
+        const claims = await userService.getUserClaims(user[0].id);
+        const token = createAccessToken(user[0], claims);
 
         return res.status(200).json({
             token,

@@ -44,8 +44,24 @@ async function getUserByUsername(username) {
     return rows[0];
 }
 
+async function getUserClaims(userId) {
+    const pool = await getPool();
+
+    const sql = `
+        SELECT c.name
+        FROM claims c
+        INNER JOIN user_claims uc ON c.id = uc.claim_id
+        WHERE uc.user_id = ?
+    `;
+
+    const [rows] = await pool.execute(sql, [userId]);
+
+    return rows.map(row => row.name);
+}
+
 module.exports = {
   getUsers,
   createUser,
-  getUserByUsername
+  getUserByUsername,
+  getUserClaims
 };

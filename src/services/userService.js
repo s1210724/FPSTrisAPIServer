@@ -39,8 +39,18 @@ async function getUserByUsername(username) {
   return userRepository.getUserByUsername(username);
 }
 
+async function getUserClaims(userId) {
+  if (!userId || typeof userId !== 'number') {
+    const error = new Error('User ID must be a valid number.');
+    error.status = 400;
+    throw error;
+  }
+  return userRepository.getUserClaims(userId);
+}
+
 module.exports = {
   getUsers,
   createUser,
-  getUserByUsername
+  getUserByUsername,
+  getUserClaims
 };

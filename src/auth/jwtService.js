@@ -4,12 +4,13 @@ const {
     getCurrentSigningKey,
 } = require('./jwtKeyManager');
 
-function createAccessToken(user) {
+function createAccessToken(user, claims = []) {
     const keyData = getCurrentSigningKey();
 
     const payload = {
         userId: user.id,
         username: user.username,
+        claims: claims,
     };
 
     return jwt.sign(payload, keyData.privateKey, {
