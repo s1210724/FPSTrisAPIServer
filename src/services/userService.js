@@ -30,7 +30,17 @@ async function createUser(payload) {
   return userRepository.createUser(mappedPayload);
 }
 
+async function getUserByUsername(username) {
+  if (!username || typeof username !== 'string') {
+    const error = new Error('Username must be a non-empty string.');
+    error.status = 400;
+    throw error;
+  }
+  return userRepository.getUserByUsername(username);
+}
+
 module.exports = {
   getUsers,
-  createUser
+  createUser,
+  getUserByUsername
 };

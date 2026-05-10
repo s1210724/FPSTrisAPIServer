@@ -1,7 +1,19 @@
+require('dotenv').config();
+
 const app = require('./app');
 
-const PORT = 3001;
+const {
+    initializeKeyManager,
+} = require('./auth/jwtKeyManager');
 
-app.listen(PORT, () => {
-  console.log(`FPSTris API server running on port ${PORT}`);
-});
+const PORT = process.env.PORT;
+
+async function startServer() {
+    await initializeKeyManager();
+
+    app.listen(PORT, () => {
+        console.log(`API Server running on port ${PORT}`);
+    });
+}
+
+startServer();
