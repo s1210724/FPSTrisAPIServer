@@ -1,4 +1,5 @@
 const userService = require('../services/userService');
+const authController = require('./authController');
 
 async function getUsers(req, res, next) {
   try {
@@ -13,7 +14,12 @@ async function getUsers(req, res, next) {
 async function createUser(req, res, next) {
   try {
     const createdUser = await userService.createUser(req.body);
-    res.status(201).json(createdUser);
+    const logInAfterRegister = String(process.env.USER_LOGGED_IN_AFTER_REGISTER ?? '').toLowerCase() === 'true';
+    if (logInAfterRegister) {
+      const token = await authController.login(req, res);
+    } else {
+      res.status(201).json(createdUser);
+    }
   } catch (error) {
     next(error);
   }
