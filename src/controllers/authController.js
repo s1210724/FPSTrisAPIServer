@@ -8,9 +8,7 @@ const {
 
 async function login(req, res) {
     try {
-        console.log('Login request received with body:', req.body);
         const { username, password } = req.body;
-        console.log(username, password);
 
         if (!username || !password) {
             return res.status(400).json({
