@@ -11,22 +11,15 @@ async function getUsers(limit) {
   return rows;
 }
 
-async function createUser({ voornaam, achternaam }) {
-  console.log('function is deprecated, create new func');
-  // const pool = await getPool();
+async function createUser(email, username, password) {
+  const pool = await getPool();
 
-  // // Threat ID #90: Mitigatie voor SQL-injectie met prepared statements
-  // const [insertResult] = await pool.execute(
-  //   'INSERT INTO `users` (username, email) VALUES (?, ?);',
-  //   [voornaam, achternaam]
-  // );
-
-  // const [rows] = await pool.execute(
-  //   'SELECT id, username, email FROM `users` WHERE id = ?;',
-  //   [insertResult.insertId]
-  // );
-
-  // return rows[0] || null;
+  const sql = `
+    INSERT INTO users (id, email, username, password, color_palette, played_games, wins, created_at, updated_at) 
+    VALUES (NULL, ?, ?, ?, 'default', '0', '0', current_timestamp(), current_timestamp());
+  `;
+  const [result] = await pool.execute(sql, [email, username, password]);
+  return result;
 }
 
 async function getUserByUsername(username) {

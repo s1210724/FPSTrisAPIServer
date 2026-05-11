@@ -1,3 +1,5 @@
+const { hashPassword } = require('../auth/passwordHasher');
+
 const userRepository = require('../repositories/userRepository');
 
 function validateCreateUserPayload(payload) {
@@ -7,16 +9,17 @@ function validateCreateUserPayload(payload) {
     throw error;
   }
 
-  const voornaam = payload.voornaam || payload.firstName || payload.username;
-  const achternaam = payload.achternaam || payload.lastName || payload.email;
+  const email = payload.email;
+  const username = payload.username;
+  const password = payload.password;
 
-  if (!voornaam || !achternaam) {
-    const error = new Error('voornaam and achternaam are required (or firstName/lastName).');
+  if (!email || !username || !password) {
+    const error = new Error('email, username, and password are required.');
     error.status = 400;
     throw error;
   }
 
-  return { voornaam, achternaam };
+  return { email, username, password };
 }
 
 async function getUsers(limit) {
@@ -26,8 +29,13 @@ async function getUsers(limit) {
 
 async function createUser(payload) {
   const mappedPayload = validateCreateUserPayload(payload);
+  const hashedPassword = await hashPassword(mappedPayload.password);
 
-  return userRepository.createUser(mappedPayload);
+  return userRepository.createUser(
+    mappedPayload.email,
+    mappedPayload.username,
+    hashedPassword
+  );
 }
 
 async function getUserByUsername(username) {

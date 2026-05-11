@@ -42,28 +42,29 @@ const [insertResult] = await pool.execute(
 ## Setup
 1. Install dependencies:
 	- `npm install`
-2. Create your own credentials file:
-	- Create `src/config/db.credentials.js`
-	- Add this general structure and replace values with your own:
+2. Create a `.env` file in the root directory:
+	- Copy the environment variables below and replace with your own values:
 
-```js
-module.exports = {
-  host: 'localhost',
-  port: 3306,
-  user: 'your_mysql_user',
-  password: 'your_mysql_password',
-  database: 'fpstris'
-};
+```env
+DB_HOST=your_domain
+DB_PORT=3306
+DB_USER=your_mysql_user
+DB_PASSWORD=your_mysql_password
+DB_NAME=your_database_name
+PORT=3001
+ACCESS_TOKEN_EXPIRES=1h
+JWT_ISSUER=issuer-example
+JWT_AUDIENCE=audience-example
 ```
 
 Notes:
-- `host` and `server` are both accepted by the DB client. Prefer `host` for MySQL.
-- `src/config/` is ignored by Git, so your local credentials are not committed.
+- `.env` is ignored by Git, so your local credentials are not committed.
+- Adjust `PORT`, `ACCESS_TOKEN_EXPIRES`, `JWT_ISSUER`, and `JWT_AUDIENCE` as needed for your environment.
 3. Start the server:
 	- `npm run dev` (watch mode)
 	- or `npm start`
 
-The API runs on port `3001`.
+The API runs on the port specified in your `.env` file (default: `3001`).
 
 ---
 
@@ -75,25 +76,24 @@ The API runs on port `3001`.
 ### Example `POST /api/users` body
 ```json
 {
-  "voornaam": "John",
-  "achternaam": "Doe"
+  "email": "john@example.com",
+  "username": "John",
+  "password": "secret-password"
 }
 ```
 
-Accepted aliases for create payload:
-- `firstName` maps to `voornaam`
-- `lastName` maps to `achternaam`
+Password hashing is handled in `src/auth/passwordHasher.js` before the user is saved.
 
 ---
 
 ## Database Expectations
 Current repository queries expect:
-- Database: `fpstris` (or whatever you set in credentials)
-- Table: `user`
-- Columns: `id`, `voornaam`, `achternaam`
+- Database: value from `.env` as `DB_NAME`
+- Table: `users`
+- Columns: `id`, `email`, `username`, `password`, `color_palette`, `played_games`, `wins`, `created_at`, `updated_at`
 
 ---
 
 ## Notes
-- `src/config/` is ignored by Git.
-- If tracked config files already exist in your local git history, they may still appear as tracked until removed from the index.
+- `.env` is ignored by Git, so environment variables are not committed.
+- Database migrations are managed via Knex. Run `npx knex migrate:latest` to set up the database schema.
