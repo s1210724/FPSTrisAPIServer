@@ -1,79 +1,100 @@
 # FPSTrisAPIServer
-REST API server for the FPSTris game
 
-## Stack
-- Node.js
-- Express
-- MySQL via `mysql2`
+REST API server for the FPSTris game.
 
-## Design Pattern
-This project uses a layered architecture (service-repository style):
-- Routes: HTTP endpoint definitions
+## Overview
+
+This repository contains a Node.js/Express API server that connects to a MySQL database and issues JWT access tokens. The server is organized in a layered architecture:
+
+- Routes: HTTP endpoints
 - Controllers: request/response orchestration
-- Services: payload validation and business logic
-- Repositories: SQL queries and persistence
+- Services: business logic and validation
+- Repositories: database queries
 - DB client: shared MySQL connection pool
 
-Request flow:
-- `/api/users` route -> controller -> service -> repository -> MySQL
+## Prerequisites
 
----
+- Node.js 18+ installed
+- MySQL server available
+- `npm` available
+- A database user with privileges to connect, create, and read/write the target schema
 
-## Threat Mitigation
+## Install
 
-### Bedreiging #90: SQL Injection Risico
-- STRIDE-categorie: Elevation of Privilege
-- Mitigatie: Gebruik van prepared statements met `mysql2` om SQL-injectie te voorkomen.
-- Codebestand: `src/repositories/userRepository.js`
-- Toelichting: In plaats van directe string concatenation in SQL-queries, worden parameterized queries gebruikt. Dit zorgt ervoor dat gebruikersinvoer altijd als data wordt behandeld en nooit als onderdeel van de SQL-syntaxis. De `mysql2`-library ondersteunt prepared statements, wat de veiligheid van database-operaties verbetert.
+1. Open a terminal in the project root.
+2. Install dependencies:
 
-#### Voorbeeldcode:
-```javascript
-// Veilige implementatie met prepared statements
-const [insertResult] = await pool.execute(
-  'INSERT INTO `user` (voornaam, achternaam) VALUES (?, ?);',
-  [voornaam, achternaam]
-);
+```bash
+npm install
 ```
-- hoe werkt dit: De `?`-placeholders in de query worden vervangen door de waarden in de array `[voornaam, achternaam]`, maar dit gebeurt op een veilige manier waar de waardes direct als waardes worden gelezen en niet als onderdeel van de querry dmv. string concatenation . Hierdoor kunnen er geen escape karakter gebruikt worden die de mogelijkheid zouden kunnen bieden tot SQL injectie.
 
----
+## Environment Variables
 
-## Setup
-1. Install dependencies:
-	- `npm install`
-2. Create a `.env` file in the root directory:
-	- Copy the environment variables below and replace with your own values:
+Create a `.env` file in the project root with the variables listed below.
+
+### Required environment variables
+
+- `DB_HOST` - MySQL host name or IP address.
+- `DB_USER` - MySQL username.
+- `DB_PASSWORD` - MySQL password.
+- `DB_NAME` - MySQL database name.
+- `PORT` - Port for the Express server to listen on.
+- `ACCESS_TOKEN_EXPIRES` - JWT expiration duration, e.g. `1h` or `30m`.
+- `JWT_ISSUER` - JWT issuer string used when signing tokens.
+- `JWT_AUDIENCE` - JWT audience string used when signing tokens.
+
+### Optional environment variables
+
+- `DB_PORT` - MySQL port. If omitted, the MySQL client will use the default port `3306`.
+
+### Example `.env`
 
 ```env
-DB_HOST=your_domain
+DB_HOST=localhost
 DB_PORT=3306
-DB_USER=your_mysql_user
-DB_PASSWORD=your_mysql_password
-DB_NAME=your_database_name
+DB_USER=fpstris_user
+DB_PASSWORD=SuperSecretPassword
+DB_NAME=fpstris_db
 PORT=3001
 ACCESS_TOKEN_EXPIRES=1h
-JWT_ISSUER=issuer-example
-JWT_AUDIENCE=audience-example
+JWT_ISSUER=fpstris-api
+JWT_AUDIENCE=fpstris-clients
 ```
 
-Notes:
-- `.env` is ignored by Git, so your local credentials are not committed.
-- Adjust `PORT`, `ACCESS_TOKEN_EXPIRES`, `JWT_ISSUER`, and `JWT_AUDIENCE` as needed for your environment.
-3. Start the server:
-	- `npm run dev` (watch mode)
-	- or `npm start`
+> Keep `.env` outside source control. This repository already ignores `.env`.
 
-The API runs on the port specified in your `.env` file (default: `3001`).
+## Database Setup
 
----
+This project uses Knex for migrations and seeds. After setting your `.env` values, run:
 
-## Endpoints
-- `GET /health`
-- `GET /api/users?limit=25`
-- `POST /api/users`
+```bash
+npx knex migrate:latest
+```
 
-### Example `POST /api/users` body
+If you want to populate seed data, run:
+
+```bash
+npx knex seed:run
+```
+
+## Run the Server
+
+- Start the server:
+
+```bash
+npm start
+```
+
+The server reads `PORT` from `.env` and starts on that port.
+
+## API Endpoints
+
+- `GET /health` - health check
+- `GET /api/users?limit=25` - list users with optional `limit`
+- `POST /api/users` - create a new user
+
+### Example `POST /api/users`
+
 ```json
 {
   "email": "john@example.com",
@@ -82,18 +103,33 @@ The API runs on the port specified in your `.env` file (default: `3001`).
 }
 ```
 
-Password hashing is handled in `src/auth/passwordHasher.js` before the user is saved.
+## Notes on JWT and Auth
 
----
+- JWT signing is handled in `src/auth/jwtService.js`.
+- Keys are generated and rotated in `src/auth/jwtKeyManager.js`.
+- JWT token settings depend on `ACCESS_TOKEN_EXPIRES`, `JWT_ISSUER`, and `JWT_AUDIENCE`.
 
-## Database Expectations
-Current repository queries expect:
-- Database: value from `.env` as `DB_NAME`
-- Table: `users`
-- Columns: `id`, `email`, `username`, `password`, `color_palette`, `played_games`, `wins`, `created_at`, `updated_at`
+## Database Configuration
 
----
+Knex reads MySQL connection values from the same `.env` file in `knexfile.js`.
 
-## Notes
-- `.env` is ignored by Git, so environment variables are not committed.
-- Database migrations are managed via Knex. Run `npx knex migrate:latest` to set up the database schema.
+Expected database connection values:
+
+- `DB_HOST` for host
+- `DB_PORT` for port
+- `DB_USER` for user
+- `DB_PASSWORD` for password
+- `DB_NAME` for database name
+
+## Useful Scripts
+
+- `npm install` - install dependencies
+- `npm start` - start server normally
+
+## Recommended Workflow
+
+1. Create `.env` with required values.
+2. Install dependencies.
+3. Run `npx knex migrate:latest`.
+4. Run `npm start`.
+5. Call the API at `http://localhost:<PORT>`.
