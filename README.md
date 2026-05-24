@@ -12,42 +12,36 @@ This repository contains a Node.js/Express API server that connects to a MySQL d
 - Repositories: database queries
 - DB client: shared MySQL connection pool
 
-## Prerequisites
+Request flow:
+- `/api/users` route -> controller -> service -> repository -> MySQL
 
-- Node.js 18+ installed
-- MySQL server available
-- `npm` available
-- A database user with privileges to connect, create, and read/write the target schema
+---
 
-## Install
+## Threat Mitigation
 
-1. Open a terminal in the project root.
-2. Install dependencies:
+### Bedreiging #90: SQL Injection Risico
+- STRIDE-categorie: Elevation of Privilege
+- Mitigatie: Gebruik van prepared statements met `mysql2` om SQL-injectie te voorkomen.
+- Codebestand: `src/repositories/userRepository.js`
+- Toelichting: In plaats van directe string concatenation in SQL-queries, worden parameterized queries gebruikt. Dit zorgt ervoor dat gebruikersinvoer altijd als data wordt behandeld en nooit als onderdeel van de SQL-syntaxis. De `mysql2`-library ondersteunt prepared statements, wat de veiligheid van database-operaties verbetert.
 
-```bash
-npm install
+#### Voorbeeldcode:
+```javascript
+// Veilige implementatie met prepared statements
+const [insertResult] = await pool.execute(
+  'INSERT INTO `user` (voornaam, achternaam) VALUES (?, ?);',
+  [voornaam, achternaam]
+);
 ```
+- hoe werkt dit: De `?`-placeholders in de query worden vervangen door de waarden in de array `[voornaam, achternaam]`, maar dit gebeurt op een veilige manier waar de waardes direct als waardes worden gelezen en niet als onderdeel van de querry dmv. string concatenation . Hierdoor kunnen er geen escape karakter gebruikt worden die de mogelijkheid zouden kunnen bieden tot SQL injectie.
 
-## Environment Variables
+---
 
-Create a `.env` file in the project root with the variables listed below.
-
-### Required environment variables
-
-- `DB_HOST` - MySQL host name or IP address.
-- `DB_USER` - MySQL username.
-- `DB_PASSWORD` - MySQL password.
-- `DB_NAME` - MySQL database name.
-- `PORT` - Port for the Express server to listen on.
-- `ACCESS_TOKEN_EXPIRES` - JWT expiration duration, e.g. `1h` or `30m`.
-- `JWT_ISSUER` - JWT issuer string used when signing tokens.
-- `JWT_AUDIENCE` - JWT audience string used when signing tokens.
-
-### Optional environment variables
-
-- `DB_PORT` - MySQL port. If omitted, the MySQL client will use the default port `3306`.
-
-### Example `.env`
+## Setup
+1. Install dependencies:
+    - `npm install`
+2. Create a `.env` file in the root directory:
+    - Copy the environment variables below and replace with your own values:
 
 ```env
 DB_HOST=localhost
@@ -57,33 +51,21 @@ DB_PASSWORD=SuperSecretPassword
 DB_NAME=fpstris_db
 PORT=3001
 ACCESS_TOKEN_EXPIRES=1h
-JWT_ISSUER=fpstris-api
-JWT_AUDIENCE=fpstris-clients
+JWT_ISSUER=issuer-example
+JWT_AUDIENCE=audience-example
 ```
 
-> Keep `.env` outside source control. This repository already ignores `.env`.
-
-## Database Setup
-
-This project uses Knex for migrations and seeds. After setting your `.env` values, run:
-
-```bash
-npx knex migrate:latest
-```
-
-If you want to populate seed data, run:
-
-```bash
-npx knex seed:run
-```
-
-## Run the Server
-
-- Start the server:
-
-```bash
-npm start
-```
+Notes:
+- `.env` is ignored by Git, so your local credentials are not committed.
+- Adjust `PORT`, `ACCESS_TOKEN_EXPIRES`, `JWT_ISSUER`, and `JWT_AUDIENCE` as needed for your environment.
+3. Create the database referenced by `DB_NAME` using your preferred MySQL client or administration tool.
+4. Run the Knex migrations to create the schema:
+    - `npx knex migrate:latest`
+5. (Optional) Seed initial data:
+    - `npx knex seed:run`
+6. Start the server:
+    - `npm run dev` (watch mode)
+    - or `npm start`
 
 The server reads `PORT` from `.env` and starts on that port.
 
