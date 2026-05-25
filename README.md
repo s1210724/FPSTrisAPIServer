@@ -58,7 +58,7 @@ JWT_AUDIENCE=audience-example
 Notes:
 - `.env` is ignored by Git, so your local credentials are not committed.
 - Adjust `PORT`, `ACCESS_TOKEN_EXPIRES`, `JWT_ISSUER`, and `JWT_AUDIENCE` as needed for your environment.
-3. Create the database referenced by `DB_NAME` using your preferred MySQL client or administration tool.
+3. Create the database referenced by `DB_NAME` using your preferred MySQL client or administration tool. **important! this application uses a MySQL database.**
 4. Run the Knex migrations to create the schema:
     - `npx knex migrate:latest`
 5. (Optional) Seed initial data:
