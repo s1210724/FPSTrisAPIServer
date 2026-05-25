@@ -51,6 +51,14 @@ async function login(req, res) {
     }
 }
 
+function logout(_req, res) {
+    res.setHeader('Set-Cookie', 'token=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax');
+    return res.status(200).json({
+        message: 'Logged out successfully',
+    });
+}
+
 module.exports = {
     login,
+    logout,
 };
