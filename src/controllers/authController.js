@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 
 const userService = require('../services/userService');
+const authService = require('../services/authService');
 
 const {
     createAccessToken,
@@ -26,7 +27,7 @@ async function login(req, res) {
 
         const passwordMatch = await bcrypt.compare(
             password,
-            user[0].password
+            user.password
         );
 
         if (!passwordMatch) {
@@ -35,8 +36,8 @@ async function login(req, res) {
             });
         }
 
-        const claims = await userService.getUserClaims(user[0].id);
-        const token = createAccessToken(user[0], claims);
+        const claims = await userService.getUserClaims(user.id);
+        const token = createAccessToken(user, claims);
 
         return res.status(200).json({
             token,
@@ -58,7 +59,59 @@ function logout(_req, res) {
     });
 }
 
+async function requestPasswordReset(req, res) {
+    try {
+        const { email } = req.body;
+
+        if (!email || typeof email !== 'string') {
+            return res.status(400).json({
+                message: 'A valid email address is required',
+            });
+        }
+
+        await authService.requestPasswordReset(email);
+
+        return res.status(200).json({
+            message: 'If that email is registered, a password reset link has been sent.',
+        });
+    }
+    catch (error) {
+        console.error(error);
+
+        return res.status(500).json({
+            message: 'Password reset request failed',
+        });
+    }
+}
+
+async function resetPassword(req, res) {
+    try {
+        const { email, code, password } = req.body;
+
+        if (!email || !code || !password || typeof password !== 'string') {
+            return res.status(400).json({
+                message: 'Email, code, and new password are required',
+            });
+        }
+
+        await authService.resetPassword(email, code, password);
+
+        return res.status(200).json({
+            message: 'Password has been reset successfully',
+        });
+    }
+    catch (error) {
+        console.error(error);
+
+        return res.status(500).json({
+            message: error.message || 'Password reset failed',
+        });
+    }
+}
+
 module.exports = {
     login,
     logout,
+    requestPasswordReset,
+    resetPassword,
 };
